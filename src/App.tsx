@@ -5,7 +5,7 @@ import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { useWishlistSync } from './hooks/useWishlistSync';
-import { detectDomain, type AppDomain } from './utils/domain';
+import { detectDomain } from './utils/domain';
 
 // ── Lazy-loaded page components (code-splitting) ──────────────────────
 // Named-only exports use .then() wrapper; default exports load directly.

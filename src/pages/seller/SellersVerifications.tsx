@@ -39,7 +39,7 @@ const Input: React.FC<{ label: string; value?: string; onChange?: (val: string) 
 );
 
 const SellersVerifications: React.FC<SellersVerificationsProps> = ({ onBack, onProceed, countryCode = 'IN' }) => {
-  const [countries, setCountries] = useState<{ code: string; name: string; dialCode: string }[]>([]);
+  const [, setCountries] = useState<{ code: string; name: string; dialCode: string }[]>([]);
   const [businessTypes, setBusinessTypes] = useState<string[]>([]);
   const [currentCountry, setCurrentCountry] = useState<{ code: string; name: string; dialCode: string }>({ code: 'IN', name: 'India', dialCode: '+91' });
 

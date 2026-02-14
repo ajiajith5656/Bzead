@@ -56,6 +56,12 @@ const OrderSummaryPage: React.FC = () => {
   };
 
   const handleProceedToPayment = () => {
+    const customerId = user?.id || currentAuthUser?.username;
+    if (!customerId) {
+      navigate('/login');
+      return;
+    }
+
     // Navigate to payment page with all order data
     navigate('/checkout/payment', {
       state: {
@@ -74,7 +80,7 @@ const OrderSummaryPage: React.FC = () => {
           postalCode: shippingData.postalCode,
           country: shippingData.country,
         } : undefined,
-        customerId: user?.id || currentAuthUser?.username || 'guest',
+        customerId,
         customerEmail: shippingData?.email || user?.email || '',
         customerName: shippingData?.fullName || user?.full_name || user?.first_name || '',
       },

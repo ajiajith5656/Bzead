@@ -38,10 +38,6 @@ export const SellerVerificationPage: React.FC<Props> = ({ seller, onStatusUpdate
           ← Back to verification status
         </button>
         <SellerKYCVerification
-          sellerEmail={seller.email}
-          sellerPhone={seller.phone || ''}
-          sellerFullName={seller.shop_name}
-          sellerCountry={'India'}
           sellerId={seller.id}
           onSubmit={() => {
             onStatusUpdate?.({ kyc_status: 'pending' });
@@ -100,7 +96,7 @@ export const SellerVerificationPage: React.FC<Props> = ({ seller, onStatusUpdate
       {(kycState === 'none' || kycState === 'draft' || kycState === 'rejected') && (
         <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-400 text-white font-semibold py-4 rounded-xl transition-colors">
           <FileText size={20} />
-          {kycState === 'rejected' ? 'Resubmit KYC Documents' : 'Start KYC Verification'}
+          {kycState === 'draft' ? 'Resume KYC Verification' : kycState === 'rejected' ? 'Resubmit KYC Documents' : 'Start KYC Verification'}
           <ChevronRight size={18} />
         </button>
       )}
@@ -108,7 +104,7 @@ export const SellerVerificationPage: React.FC<Props> = ({ seller, onStatusUpdate
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-5">
         <h4 className="text-gray-900 font-semibold text-sm mb-2">How it works</h4>
         <ol className="text-gray-600 text-sm space-y-2 list-decimal list-inside">
-          <li>Submit your tax, identity, address, and bank documents</li>
+          <li>Fill in your personal, business, and bank details</li>
           <li>Admin reviews your submission (1-3 business days)</li>
           <li>You'll be notified once approved or if changes are needed</li>
         </ol>

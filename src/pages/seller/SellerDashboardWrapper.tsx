@@ -14,7 +14,7 @@ export const SellerDashboardWrapper: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const sellerId = (user as any)?.attributes?.sub || user?.id || currentAuthUser?.username;
+  const sellerId = user?.id || currentAuthUser?.username;
 
   // Fetch seller verification status
   useEffect(() => {
@@ -67,9 +67,9 @@ export const SellerDashboardWrapper: React.FC = () => {
   };
 
   // Get seller info from auth
-  const sellerEmail = user?.email || currentAuthUser?.email || currentAuthUser?.attributes?.email || 'seller@example.com';
-  const sellerPhone = user?.phone || currentAuthUser?.attributes?.phone_number || '';
-  const sellerFullName = user?.full_name || currentAuthUser?.attributes?.name || 'Seller';
+  const sellerEmail = user?.email || currentAuthUser?.email || 'seller@example.com';
+  const sellerPhone = user?.phone || '';
+  const sellerFullName = user?.full_name || 'Seller';
   const sellerCountry = 'India'; // This should come from user profile
 
   // Show loading state while fetching seller data

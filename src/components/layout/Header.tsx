@@ -9,9 +9,6 @@ import { SUPPORTED_CURRENCIES } from '../../utils/currency';
 import { getSellerDomainUrl } from '../../utils/domain';
 import logger from '../../utils/logger';
 
-// TODO: Backend stubs — connect to your API
-const requireLogin = (_v: boolean) => {};
-
 export const Header: React.FC = () => {
   const { user, currentAuthUser, signOut } = useAuth();
   const { totalItems } = useCart();
@@ -134,7 +131,7 @@ export const Header: React.FC = () => {
 
             {/* Become a Seller Button */}
             <a
-              href={getSellerDomainUrl('/signup')}
+              href={getSellerDomainUrl('/')}
               className="text-sm font-medium text-amber-600 hover:text-amber-600-light transition-all duration-300"
             >
               Become a Seller
@@ -144,7 +141,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => {
                 if (!isLoggedIn) {
-                  requireLogin(false);
+                  navigate('/login');
                 } else {
                   handleNavigation('/wishlist');
                 }
@@ -168,7 +165,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => {
                 if (!isLoggedIn) {
-                  requireLogin(false);
+                  navigate('/login');
                 } else {
                   handleNavigation('/cart');
                 }
@@ -340,7 +337,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => {
                 if (!isLoggedIn) {
-                  requireLogin(false);
+                  navigate('/login');
                 } else {
                   window.location.href = '/wishlist';
                 }
@@ -359,7 +356,7 @@ export const Header: React.FC = () => {
             <button
               onClick={() => {
                 if (!isLoggedIn) {
-                  requireLogin(false);
+                  navigate('/login');
                 } else {
                   window.location.href = '/cart';
                 }
@@ -456,7 +453,7 @@ export const Header: React.FC = () => {
 
             {/* Become a Seller */}
             <a
-              href={getSellerDomainUrl('/signup')}
+              href={getSellerDomainUrl('/')}
               className="block px-3 py-2 text-sm text-amber-600 hover:bg-gray-50 rounded transition-all duration-300"
               onClick={() => setShowMobileMenu(false)}
             >

@@ -11,7 +11,7 @@ export const AnalyticsDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   
-  const sellerId = (user as any)?.attributes?.sub || user?.id;
+  const sellerId = user?.id;
 
   // Fetch orders on component mount
   useEffect(() => {

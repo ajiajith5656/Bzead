@@ -122,7 +122,7 @@ export const NewHome: React.FC = () => {
             Join thousands of successful sellers and grow your business globally
           </p>
           <a
-            href={getSellerDomainUrl('/signup')}
+            href={getSellerDomainUrl('/')}
             className="inline-flex items-center space-x-2 btn-primary text-lg px-5 py-3"
           >
             <span>Get Started Now</span>

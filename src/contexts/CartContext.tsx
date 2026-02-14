@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Product } from '../types';
-import { supabase } from '../lib/supabase';
+import { createOrder } from '../lib/orderService';
 
 interface CartItem {
   product: Product;
@@ -62,46 +62,37 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createOrderFromCart = async (
     userId: string,
     shippingAddress: any,
-    _billingAddress?: any,
+    billingAddress?: any,
     _paymentMethod: string = 'card'
   ) => {
     try {
       setIsCreatingOrder(true);
       if (items.length === 0) throw new Error('Cart is empty. Cannot create order.');
 
-      const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-      const taxAmount = Math.round(subtotal * 0.18);
-      const shippingCost = 100;
-      const totalAmount = subtotal + taxAmount + shippingCost;
+      const totalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-      // TODO: Connect to your backend order API
-      // Create order in Supabase
-      const { data: order, error: orderErr } = await supabase
-        .from('orders')
-        .insert({
-          user_id: userId,
-          order_number: `ORD-${Date.now()}`,
-          status: 'pending',
-          total_amount: totalAmount,
-          shipping_address: shippingAddress,
-        })
-        .select()
-        .single();
+      // Use centralized orderService for consistent order creation
+      const result = await createOrder({
+        user_id: userId,
+        seller_id: items[0]?.product.seller_id || undefined,
+        total_amount: totalAmount,
+        currency: items[0]?.product.currency || 'INR',
+        shipping_address: shippingAddress,
+        billing_address: billingAddress || undefined,
+        items: items.map((item) => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          product_image: item.product.image_url || '',
+          quantity: item.quantity,
+          price: item.product.price,
+          category: item.product.category || undefined,
+        })),
+      });
 
-      if (orderErr || !order) throw new Error(orderErr?.message || 'Failed to create order');
-
-      // Insert order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-      }));
-      await supabase.from('order_items').insert(orderItems);
+      if (result.error) throw new Error(result.error);
 
       clearCart();
-      return order;
+      return result.data;
     } catch (error) {
       console.error('Failed to create order:', error);
       throw error;

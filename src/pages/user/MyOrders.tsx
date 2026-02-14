@@ -45,12 +45,9 @@ export const MyOrders: React.FC = () => {
         if (result?.data) {
           const fetchedOrders = result.data.map((order: any) => {
             let itemsCount = 0;
-            try {
-              const items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.order_items || order.items);
-              itemsCount = Array.isArray(items) ? items.length : 0;
-            } catch (e) {
-              itemsCount = 0;
-            }
+            // order_items comes as a joined array from fetchOrdersByUser
+            const items = order.order_items || order.items || [];
+            itemsCount = Array.isArray(items) ? items.length : 0;
 
             return {
               id: order.id,
@@ -66,7 +63,7 @@ export const MyOrders: React.FC = () => {
           setOrders(fetchedOrders);
         }
       } catch (error) {
-        logger.error(error as Error, { context: 'Failed to load orders from GraphQL' });
+        logger.error(error as Error, { context: 'Failed to load orders from Supabase' });
         // Fallback: show empty state
         setOrders([]);
       } finally {

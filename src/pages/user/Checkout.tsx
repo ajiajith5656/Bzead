@@ -163,16 +163,22 @@ const CheckoutForm: React.FC<
             price: item.price,
             seller_id: item.sellerId || null,
           }));
-          await supabase.from('order_items').insert(orderItems);
+          const { error: itemsErr } = await supabase.from('order_items').insert(orderItems);
+          if (itemsErr) {
+            console.error('Failed to insert order items:', itemsErr.message);
+          }
 
           // Record payment
-          await supabase.from('payment_intents').insert({
+          const { error: paymentErr } = await supabase.from('payment_intents').insert({
             order_id: order.id,
             stripe_payment_intent_id: paymentIntentId,
             status: paymentIntent.status,
             amount: totalAmount,
             currency: currency.toLowerCase(),
           });
+          if (paymentErr) {
+            console.error('Failed to record payment intent:', paymentErr.message);
+          }
 
           setSuccess(true);
 

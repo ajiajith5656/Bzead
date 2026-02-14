@@ -26,8 +26,8 @@ export const SellerProfile: React.FC = () => {
     }
   });
 
-  const [shopLogo, setShopLogo] = useState('https://via.placeholder.com/200');
-  const sellerId = (user as any)?.attributes?.sub || user?.id;
+  const [shopLogo, setShopLogo] = useState('');
+  const sellerId = user?.id;
 
   // Fetch seller data on component mount
   useEffect(() => {
@@ -59,6 +59,9 @@ export const SellerProfile: React.FC = () => {
             ifscCode: ''
           }
         });
+        if (seller.avatar_url) {
+          setShopLogo(seller.avatar_url);
+        }
       }
     } catch (err) {
       console.error('Error fetching seller data:', err);

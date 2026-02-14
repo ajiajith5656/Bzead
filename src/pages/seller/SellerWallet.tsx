@@ -47,7 +47,7 @@ const SellerWallet: React.FC<SellerWalletProps> = ({ onLogout, sellerEmail, onNa
         setLoading(true);
         setError(null);
         
-        const sellerId = (user as any)?.attributes?.sub || user?.id || sellerEmail;
+        const sellerId = user?.id || sellerEmail;
         
         const { data, error: fetchError } = await fetchOrdersBySeller(sellerId, { limit: 100 });
 
@@ -196,7 +196,7 @@ const SellerWallet: React.FC<SellerWalletProps> = ({ onLogout, sellerEmail, onNa
 
     try {
       setWithdrawing(true);
-      const sellerId = (user as any)?.attributes?.sub || user?.id || sellerEmail;
+      const sellerId = user?.id || sellerEmail;
       
       const { data: withdrawal, error: wError } = await createWithdrawal(
         sellerId,

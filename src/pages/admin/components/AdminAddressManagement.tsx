@@ -6,7 +6,7 @@ import { Footer } from '../../../components/layout/Footer';
 import { MobileNav } from '../../../components/layout/MobileNav';
 import AddressForm from '../../../components/AddressForm';
 import type { Address } from '../../../components/AddressForm';
-import { MapPin, Edit2, Trash2, Eye, Search, ArrowLeft, Home, Briefcase, Loader2 } from 'lucide-react';
+import { MapPin, Edit2, Trash2, Eye, Search, ArrowLeft, Home, Briefcase } from 'lucide-react';
 
 interface UserAddress {
   userId: string;
@@ -19,7 +19,7 @@ const AdminAddressManagement: React.FC = () => {
   const navigate = useNavigate();
 
   const [allAddresses, setAllAddresses] = useState<UserAddress[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [_loadingData, setLoadingData] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);

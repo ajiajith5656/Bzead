@@ -26,5 +26,6 @@ export const useWishlistSync = () => {
     };
 
     syncWishlist();
+    // loadFromBackend is memoized with useCallback — stable reference
   }, [user?.id, currentAuthUser?.username, loadFromBackend]);
 };

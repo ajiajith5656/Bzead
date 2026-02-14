@@ -55,18 +55,20 @@ export const OrderDetails: React.FC = () => {
         const orderData = result.data;
 
         if (orderData) {
-          // Parse items from JSON
+          // Parse items from order_items join (snake_case from Supabase)
           let orderItems: OrderItem[] = [];
           try {
-            const items = typeof orderData.items === 'string' ? JSON.parse(orderData.items) : orderData.items;
+            // order_items comes as a joined array from fetchOrderById
+            const rawItems = orderData.order_items || orderData.items || [];
+            const items = typeof rawItems === 'string' ? JSON.parse(rawItems) : rawItems;
             orderItems = Array.isArray(items)
               ? items.map((item: any, index: number) => ({
-                  id: `${index}`,
-                  productId: item.productId,
-                  productName: item.productName,
+                  id: item.id || `${index}`,
+                  productId: item.product_id || item.productId,
+                  productName: item.product_name || item.productName,
                   quantity: item.quantity,
                   price: item.price,
-                  image: item.image || 'https://via.placeholder.com/150',
+                  image: item.product_image || item.image || 'https://via.placeholder.com/150',
                 }))
               : [];
           } catch (e) {

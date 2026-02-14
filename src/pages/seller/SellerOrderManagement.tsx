@@ -51,7 +51,7 @@ const SellerOrderManagement: React.FC<SellerOrderManagementProps> = ({ onLogout,
         setLoading(true);
         setError(null);
         
-        const sellerId = (user as any)?.attributes?.sub || user?.id || sellerEmail;
+        const sellerId = user?.id || sellerEmail;
         
         const { data, error: fetchError } = await fetchOrdersBySeller(sellerId, { limit: 100 });
 

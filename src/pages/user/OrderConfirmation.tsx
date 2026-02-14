@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle2, Package, MapPin, CreditCard, Download, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { CheckCircle2, Package, MapPin, CreditCard, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { formatCurrency as fmtCurrency } from '../../utils/currency';
+import { fetchOrderById } from '../../lib/orderService';
 
 interface OrderData {
   id: string;
@@ -40,23 +41,73 @@ interface OrderData {
 const OrderConfirmationPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { orderId } = useParams<{ orderId?: string }>();
   const { clearCart } = useCart();
   const { currency } = useCurrency();
-  const orderData = location.state?.orderData as OrderData | undefined;
+  const [orderData, setOrderData] = useState<OrderData | undefined>(
+    location.state?.orderData as OrderData | undefined
+  );
+  const [loading, setLoading] = useState(!orderData);
 
   useEffect(() => {
-    // If no order data, redirect to home
-    if (!orderData) {
-      navigate('/');
+    // If we have order data from navigation state, clear cart and done
+    if (location.state?.orderData) {
+      clearCart();
+      localStorage.removeItem('beauzead_checkout_shipping');
       return;
     }
 
-    // Clear cart after successful order
-    clearCart();
+    // If no state but we have an orderId param, fetch from Supabase
+    const id = orderId || location.pathname.split('/').pop();
+    if (id && id !== 'confirmation') {
+      const loadOrder = async () => {
+        try {
+          setLoading(true);
+          const result = await fetchOrderById(id);
+          if (result.data) {
+            const d = result.data;
+            const items = (d.order_items || []).map((item: any) => ({
+              productId: item.product_id,
+              productName: item.product_name,
+              quantity: item.quantity,
+              price: item.price,
+            }));
+            setOrderData({
+              id: d.id,
+              customerId: d.user_id,
+              customerEmail: '',
+              totalAmount: d.total_amount,
+              orderStatus: d.status || 'processing',
+              paymentStatus: d.payment_status || 'completed',
+              paymentIntentId: d.payment_intent_id || '',
+              items,
+              shippingAddress: d.shipping_address || { street: '', city: '', state: '', postalCode: '', country: '' },
+              createdAt: d.created_at,
+              updatedAt: d.updated_at || d.created_at,
+            });
+          } else {
+            navigate('/');
+          }
+        } catch {
+          navigate('/');
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadOrder();
+    } else if (!orderData) {
+      navigate('/');
+    }
+  }, [orderId, location.state, location.pathname, navigate, clearCart, orderData]);
 
-    // Clear checkout data from localStorage
-    localStorage.removeItem('beauzead_checkout_shipping');
-  }, [orderData, navigate, clearCart]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-600 animate-spin mr-3" />
+        <span className="text-lg text-gray-700">Loading order details...</span>
+      </div>
+    );
+  }
 
   if (!orderData) {
     return null;

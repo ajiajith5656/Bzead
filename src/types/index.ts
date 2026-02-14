@@ -17,6 +17,8 @@ export interface User {
   is_banned?: boolean;
   signup_date?: string;
   updated_at?: string;
+  country_id?: string;
+  business_type_id?: string;
 }
 
 export interface Admin {
@@ -343,55 +345,71 @@ export interface PlatformCost {
 }
 export interface SellerKYC {
   id: string;
+  kyc_form_id: string;
   seller_id: string;
+  current_step: number;
+  kyc_status: 'draft' | 'pending' | 'approved' | 'rejected';
 
-  // Pre-filled from signup (auto-populated)
+  // Step 1: Personal Information
+  full_name: string;
   email: string;
   phone: string;
-  full_name: string;
-  country: string;
+  country_id: string;
+  residential_street_1: string;
+  residential_street_2: string;
+  residential_city: string;
+  residential_state: string;
+  residential_postal_code: string;
+  residential_landmark: string;
+  step1_completed_at?: string;
 
-  // Tier 2 - Tax & Business Information
-  pan: string;
-  gstin?: string;
+  // Step 2: Business Information
+  business_type_id: string;
+  business_name: string;
+  business_reg_number?: string;
+  tax_id_type: string;
+  tax_id_number: string;
+  biz_street_1: string;
+  biz_street_2: string;
+  biz_city: string;
+  biz_state: string;
+  biz_postal_code: string;
+  biz_country_id: string;
+  brand_name: string;
+  business_declaration: boolean;
+  step2_completed_at?: string;
 
-  // Identity Verification
-  id_type: 'aadhar' | 'passport' | 'voter' | 'driver_license';
-  id_number: string;
-  id_document_url: string;
-  id_document_file?: File;
-
-  // Address Information
-  business_address: UserAddress;
-  address_proof_url: string;
-  address_proof_file?: File;
-
-  // Bank Details
+  // Step 3: Bank Details
   bank_holder_name: string;
+  bank_name: string;
+  branch_name?: string;
   account_number: string;
-  account_type: 'checking' | 'savings' | 'current';
-  ifsc_code: string;
-  bank_statement_url: string;
-  bank_statement_file?: File;
+  routing_code: string;
+  account_type: 'savings' | 'current' | 'other';
+  account_type_other?: string;
+  bank_authorization: boolean;
+  step3_completed_at?: string;
 
-  // Compliance & Legal
-  pep_declaration: boolean;
-  sanctions_check: boolean;
-  aml_compliance: boolean;
-  tax_compliance: boolean;
-  terms_accepted: boolean;
+  // Step 4: Documents
+  identity_doc_type: string;
+  identity_front_url?: string;
+  identity_back_url?: string;
+  business_reg_doc_url?: string;
+  tax_doc_url?: string;
+  bank_proof_url?: string;
+  consent_verification: boolean;
+  consent_authentic: boolean;
+  consent_terms: boolean;
+  step4_completed_at?: string;
 
-  // KYC Status & Metadata
-  kyc_status: 'draft' | 'pending' | 'approved' | 'rejected';
-  kyc_tier: 1 | 2 | 3;
+  // Admin / Metadata
   rejection_reason?: string;
   verified_by_admin?: string;
   verified_at?: string;
-
-  // Timestamps
+  submitted_at?: string;
+  reference_number?: string;
   created_at: string;
   updated_at: string;
-  submitted_at?: string;
 }
 
 // =====================================================

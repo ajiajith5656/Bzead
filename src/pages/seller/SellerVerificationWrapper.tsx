@@ -17,10 +17,10 @@ export const SellerVerificationWrapper: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [kycStatus, setKycStatus] = useState<string>('unverified');
 
-  const sellerId = (user as any)?.attributes?.sub || user?.id || currentAuthUser?.username || '';
+  const sellerId = user?.id || currentAuthUser?.username || '';
   const sellerEmail = user?.email || currentAuthUser?.email || '';
-  const sellerPhone = user?.phone || currentAuthUser?.attributes?.phone_number || '';
-  const sellerFullName = user?.full_name || currentAuthUser?.attributes?.name || 'Seller';
+  const sellerPhone = user?.phone || '';
+  const sellerFullName = user?.full_name || 'Seller';
 
   useEffect(() => {
     if (!sellerId) {

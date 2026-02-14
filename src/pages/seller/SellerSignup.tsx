@@ -13,12 +13,12 @@ import {
   EyeOff,
   AlertCircle,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { getMainDomainUrl } from '../../utils/domain';
 
-interface DBCountry { id: string; country_name: string; country_code: string; currency_code: string; dialing_code: string; is_active?: boolean; }
+interface DBCountry { id: string; country_name: string; short_code: string; currency_code: string; dialing_code: string; is_active?: boolean; }
 interface DBBusinessType { id: string; business_type_name: string; description?: string; is_active?: boolean; }
 
 type SignupStep = 'details' | 'otp' | 'success';
@@ -66,7 +66,7 @@ const SellerSignup: React.FC = () => {
         const [countriesResp, businessTypesResp] = await Promise.all([
           supabase
             .from('countries')
-            .select('id, country_name, country_code, currency_code, dialing_code')
+            .select('id, country_name, short_code, currency_code, dialing_code')
             .eq('is_active', true)
             .order('country_name'),
           supabase
@@ -79,7 +79,7 @@ const SellerSignup: React.FC = () => {
         const countriesData: DBCountry[] = countriesResp.data?.map((c: any) => ({
           id: c.id,
           country_name: c.country_name,
-          country_code: c.country_code,
+          short_code: c.short_code,
           currency_code: c.currency_code,
           dialing_code: c.dialing_code,
         })) || [];
@@ -98,7 +98,7 @@ const SellerSignup: React.FC = () => {
         const mappedCountries: Country[] = countriesData.map((c) => ({
           id: c.id,
           countryName: c.country_name,
-          shortCode: c.country_code,
+          shortCode: c.short_code,
           currency: c.currency_code,
           dialCode: c.dialing_code,
         }));
@@ -110,7 +110,7 @@ const SellerSignup: React.FC = () => {
         }));
 
         setCountries(mappedCountries);
-        const india = mappedCountries.find((c) => c.shortCode === 'IND');
+        const india = mappedCountries.find((c) => c.shortCode === 'IN');
         setFormData((prev) => ({ ...prev, countryId: india?.id || mappedCountries[0]?.id || '' }));
 
         setBusinessTypes(mappedBusinessTypes);

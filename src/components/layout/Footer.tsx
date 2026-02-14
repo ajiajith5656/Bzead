@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-gray-900 font-semibold mb-4">Business</h4>
             <ul className="space-y-2">
               <li>
-                <a href={getSellerDomainUrl('/signup')} className="text-gray-500 hover:text-amber-600 transition-colors text-sm">
+                <a href={getSellerDomainUrl('/')} className="text-gray-500 hover:text-amber-600 transition-colors text-sm">
                   Become a Seller
                 </a>
               </li>

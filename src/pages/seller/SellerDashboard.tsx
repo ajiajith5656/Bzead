@@ -42,7 +42,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({
   
   const isPending = verificationStatus === 'pending';
   const isVerified = verificationStatus === 'verified';
-  const sellerId = (user as any)?.attributes?.sub || user?.id;
+  const sellerId = user?.id;
 
   // Fetch orders for dashboard stats
   useEffect(() => {
