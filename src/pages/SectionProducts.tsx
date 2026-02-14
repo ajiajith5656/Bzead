@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { MobileNav } from '../components/layout/MobileNav';
 import { ProductCard } from '../components/products/ProductCard';
-import { Menu, X, Star, DollarSign, Package, ArrowLeft } from 'lucide-react';
-import { getProductsBySection, sectionInfo, type ProductSection } from '../data/mockData';
+import { Menu, X, Star, DollarSign, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import { fetchSectionProducts, sectionInfo, type ProductSection } from '../data/mockData';
+import type { Product } from '../types';
 
 interface FilterOptions {
   priceRange: [number, number];
@@ -56,7 +57,15 @@ export const SectionProducts: React.FC = () => {
   }
 
   const info = sectionInfo[currentSection];
-  const products = getProductsBySection(currentSection);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchSectionProducts(currentSection, 50)
+      .then(setProducts)
+      .finally(() => setLoading(false));
+  }, [currentSection]);
 
   // Extract unique categories from products
   const availableCategories = useMemo(() => {
@@ -332,7 +341,11 @@ export const SectionProducts: React.FC = () => {
 
           {/* Products Grid */}
           <div className="md:col-span-3">
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="bg-white border border-gray-100 rounded-xl p-12 text-center">
                 <div className="text-4xl mb-4">{info.icon}</div>
                 <h2 className="text-xl font-semibold text-black mb-2">No Products Found</h2>

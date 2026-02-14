@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Search } from '../components/layout/Search';
 import { Categories } from '../components/layout/Categories';
@@ -8,8 +8,9 @@ import { HeroCarousel } from '../components/layout/HeroCarousel';
 import { Footer } from '../components/layout/Footer';
 import { MobileNav } from '../components/layout/MobileNav';
 import { HomeProductCard } from '../components/products/HomeProductCard';
-import { mockProducts, hotDeals, trendingDeals } from '../data/mockData';
+import { fetchHomepageProducts } from '../data/mockData';
 import { getSellerDomainUrl } from '../utils/domain';
+import type { Product } from '../types';
 
 const AdBanner: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
   <div className="w-full my-6">
@@ -29,9 +30,10 @@ const AdBanner: React.FC<{ src: string; alt: string }> = ({ src, alt }) => (
 
 const ProductSection: React.FC<{
   title: string;
-  products: typeof mockProducts;
+  products: Product[];
   seeMoreLink: string;
-}> = ({ title, products, seeMoreLink }) => (
+  loading?: boolean;
+}> = ({ title, products, seeMoreLink, loading }) => (
   <div className="py-6">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-4">
@@ -45,16 +47,39 @@ const ProductSection: React.FC<{
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {products.slice(0, 8).map((product) => (
-          <HomeProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        </div>
+      ) : products.length === 0 ? (
+        <p className="text-center text-gray-400 py-8">No products available yet.</p>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {products.slice(0, 8).map((product) => (
+            <HomeProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   </div>
 );
 
 export const NewHome: React.FC = () => {
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [hotDeals, setHotDeals] = useState<Product[]>([]);
+  const [trending, setTrending] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHomepageProducts()
+      .then(({ featured, hotDeals, trending }) => {
+        setFeatured(featured);
+        setHotDeals(hotDeals);
+        setTrending(trending);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0">
       {/* Header */}
@@ -70,19 +95,19 @@ export const NewHome: React.FC = () => {
       <HeroCarousel />
 
       {/* Featured Products */}
-      <ProductSection title="Featured Products" products={mockProducts} seeMoreLink="/products/section/featured" />
+      <ProductSection title="Featured Products" products={featured} seeMoreLink="/products/section/featured" loading={loading} />
 
       {/* Ad Banner 1 */}
       <AdBanner src="/images/banners/ad-banner-1.png" alt="Advertisement 1" />
 
       {/* Hot Deals */}
-      <ProductSection title="Hot Deals 🔥" products={hotDeals} seeMoreLink="/products/section/hot-deals" />
+      <ProductSection title="Hot Deals 🔥" products={hotDeals} seeMoreLink="/products/section/hot-deals" loading={loading} />
 
       {/* Ad Banner 2 */}
       <AdBanner src="/images/banners/ad-banner-2.png" alt="Advertisement 2" />
 
       {/* Trending Deals */}
-      <ProductSection title="Trending Now 📈" products={trendingDeals} seeMoreLink="/products/section/trending" />
+      <ProductSection title="Trending Now 📈" products={trending} seeMoreLink="/products/section/trending" loading={loading} />
 
       {/* Ad Banner 3 */}
       <AdBanner src="/images/banners/ad-banner-3.png" alt="Advertisement 3" />
