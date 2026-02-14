@@ -1,0 +1,301 @@
+/**
+ * Example: How to use Stripe Connect KYC in your React components
+ * 
+ * This file demonstrates how to integrate the Stripe Connect GraphQL operations
+ * with Apollo Client in your frontend components.
+ */
+
+import { useMutation, useQuery } from '@apollo/client';
+import {
+  CREATE_STRIPE_CONNECT_ACCOUNT,
+  GENERATE_STRIPE_ONBOARDING_LINK,
+  GET_STRIPE_ACCOUNT_STATUS,
+  REFRESH_STRIPE_ACCOUNT_STATUS,
+  type CreateStripeConnectAccountInput,
+  type GenerateOnboardingLinkInput,
+} from '../graphql/stripeConnectOperations';
+
+// ========================================
+// EXAMPLE 1: Create Stripe Account
+// ========================================
+
+export function useCreateStripeAccount() {
+  const [createAccount, { data, loading, error }] = useMutation(CREATE_STRIPE_CONNECT_ACCOUNT);
+
+  const handleCreateAccount = async (sellerId: string, email: string, country: string) => {
+    try {
+      const result = await createAccount({
+        variables: {
+          input: {
+            sellerId,
+            email,
+            country,
+            businessType: 'individual', // or 'company'
+          } as CreateStripeConnectAccountInput,
+        },
+      });
+
+      if (result.data?.createStripeConnectAccount?.success) {
+        console.log('Stripe account created:', result.data.createStripeConnectAccount.accountId);
+        return result.data.createStripeConnectAccount.accountId;
+      } else {
+        console.error('Failed to create account:', result.data?.createStripeConnectAccount?.error);
+        return null;
+      }
+    } catch (err) {
+      console.error('Error creating Stripe account:', err);
+      return null;
+    }
+  };
+
+  return { handleCreateAccount, loading, error };
+}
+
+// ========================================
+// EXAMPLE 2: Generate Onboarding Link
+// ========================================
+
+export function useGenerateOnboardingLink() {
+  const [generateLink, { data, loading, error }] = useMutation(GENERATE_STRIPE_ONBOARDING_LINK);
+
+  const handleGenerateLink = async (
+    sellerId: string,
+    accountId: string,
+    returnUrl: string,
+    refreshUrl: string
+  ) => {
+    try {
+      const result = await generateLink({
+        variables: {
+          input: {
+            sellerId,
+            accountId,
+            returnUrl,
+            refreshUrl,
+          } as GenerateOnboardingLinkInput,
+        },
+      });
+
+      if (result.data?.generateStripeOnboardingLink?.success) {
+        const url = result.data.generateStripeOnboardingLink.url;
+        console.log('Onboarding link generated:', url);
+        
+        // Redirect to Stripe hosted onboarding
+        window.location.href = url!;
+        return url;
+      } else {
+        console.error('Failed to generate link:', result.data?.generateStripeOnboardingLink?.error);
+        return null;
+      }
+    } catch (err) {
+      console.error('Error generating onboarding link:', err);
+      return null;
+    }
+  };
+
+  return { handleGenerateLink, loading, error };
+}
+
+// ========================================
+// EXAMPLE 3: Get Account Status
+// ========================================
+
+export function useStripeAccountStatus(accountId: string | null) {
+  const { data, loading, error, refetch } = useQuery(GET_STRIPE_ACCOUNT_STATUS, {
+    variables: { accountId },
+    skip: !accountId, // Don't query if no account ID
+    pollInterval: 30000, // Poll every 30 seconds for updates
+  });
+
+  const accountStatus = data?.getStripeAccountStatus?.status;
+
+  return {
+    accountStatus,
+    loading,
+    error,
+    refetchStatus: refetch,
+  };
+}
+
+// ========================================
+// EXAMPLE 4: Refresh Account Status
+// ========================================
+
+export function useRefreshAccountStatus() {
+  const [refreshStatus, { data, loading, error }] = useMutation(REFRESH_STRIPE_ACCOUNT_STATUS);
+
+  const handleRefreshStatus = async (accountId: string) => {
+    try {
+      const result = await refreshStatus({
+        variables: { accountId },
+      });
+
+      if (result.data?.refreshStripeAccountStatus?.success) {
+        console.log('Account status refreshed:', result.data.refreshStripeAccountStatus.status);
+        return result.data.refreshStripeAccountStatus.status;
+      } else {
+        console.error('Failed to refresh status:', result.data?.refreshStripeAccountStatus?.error);
+        return null;
+      }
+    } catch (err) {
+      console.error('Error refreshing status:', err);
+      return null;
+    }
+  };
+
+  return { handleRefreshStatus, loading, error };
+}
+
+// ========================================
+// EXAMPLE 5: Complete KYC Flow Component
+// ========================================
+
+import React, { useEffect, useState } from 'react';
+import { Seller } from '../types';
+
+interface CompleteKYCFlowProps {
+  seller: Seller;
+}
+
+export const CompleteKYCFlow: React.FC<CompleteKYCFlowProps> = ({ seller }) => {
+  const { handleCreateAccount, loading: creating } = useCreateStripeAccount();
+  const { handleGenerateLink, loading: generating } = useGenerateOnboardingLink();
+  const { accountStatus, refetchStatus } = useStripeAccountStatus(seller.stripe_account_id || null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check if returning from Stripe onboarding
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('onboarding') === 'complete') {
+      // Refresh status after returning from Stripe
+      refetchStatus();
+    }
+  }, [refetchStatus]);
+
+  const startVerification = async () => {
+    setIsProcessing(true);
+
+    try {
+      // Step 1: Create Stripe account if doesn't exist
+      let accountId = seller.stripe_account_id;
+      
+      if (!accountId) {
+        accountId = await handleCreateAccount(
+          seller.seller_id,
+          seller.email,
+          seller.country || 'US'
+        );
+
+        if (!accountId) {
+          alert('Failed to create Stripe account');
+          setIsProcessing(false);
+          return;
+        }
+      }
+
+      // Step 2: Generate onboarding link and redirect
+      const returnUrl = `${window.location.origin}/seller-dashboard?onboarding=complete`;
+      const refreshUrl = `${window.location.origin}/seller-dashboard?onboarding=refresh`;
+
+      await handleGenerateLink(seller.seller_id, accountId, returnUrl, refreshUrl);
+      
+      // User will be redirected to Stripe, so we don't need to set isProcessing to false
+    } catch (err) {
+      console.error('Error starting verification:', err);
+      alert('An error occurred. Please try again.');
+      setIsProcessing(false);
+    }
+  };
+
+  const isLoading = creating || generating || isProcessing;
+
+  return (
+    <div className="p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-4">Seller Verification</h2>
+
+      {accountStatus && (
+        <div className="mb-6 p-4 bg-gray-50 rounded">
+          <h3 className="font-semibold mb-2">Verification Status</h3>
+          <p>Status: {accountStatus.kycStatus}</p>
+          <p>Charges Enabled: {accountStatus.chargesEnabled ? 'Yes' : 'No'}</p>
+          <p>Payouts Enabled: {accountStatus.payoutsEnabled ? 'Yes' : 'No'}</p>
+        </div>
+      )}
+
+      <button
+        onClick={startVerification}
+        disabled={isLoading || accountStatus?.kycStatus === 'verified'}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Processing...' : 'Start Verification'}
+      </button>
+
+      {accountStatus?.requirements && accountStatus.requirements.currentlyDue.length > 0 && (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <h4 className="font-semibold text-yellow-800 mb-2">Action Required</h4>
+          <ul className="list-disc pl-5 text-sm text-yellow-700">
+            {accountStatus.requirements.currentlyDue.map((req, idx) => (
+              <li key={idx}>{req}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ========================================
+// EXAMPLE 6: Using in Existing Components
+// ========================================
+
+/*
+// In your SellerDashboard or Profile component:
+
+import { CompleteKYCFlow } from '../hooks/useStripeConnect';
+
+function SellerProfile({ seller }) {
+  return (
+    <div>
+      <h1>Seller Profile</h1>
+      
+      {seller.kyc_status !== 'verified' && (
+        <CompleteKYCFlow seller={seller} />
+      )}
+      
+      {seller.kyc_status === 'verified' && (
+        <div className="bg-green-100 p-4 rounded">
+          ✓ Your account is verified!
+        </div>
+      )}
+    </div>
+  );
+}
+*/
+
+// ========================================
+// NOTES:
+// ========================================
+
+/*
+1. Make sure Apollo Client is configured in your app:
+
+   import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+
+   const client = new ApolloClient({
+     uri: import.meta.env.VITE_APPSYNC_ENDPOINT,
+     cache: new InMemoryCache(),
+     // Add auth headers here
+   });
+
+   <ApolloProvider client={client}>
+     <App />
+   </ApolloProvider>
+
+2. The seller object should come from your auth context or state management
+
+3. After AppSync resolvers are attached, these operations will work automatically
+
+4. Stripe webhooks will update seller status automatically in DynamoDB
+
+5. The frontend polls for status updates every 30 seconds
+*/
